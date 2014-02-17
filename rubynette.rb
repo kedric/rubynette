@@ -6,10 +6,11 @@
 #    By: mbacoux <marvin@42.fr>                     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2013/12/10 15:24:10 by mbacoux           #+#    #+#              #
-#    Updated: 2014/01/02 22:12:23 by mbacoux          ###   ########.fr        #
+#    Updated: 2014/02/17 15:34:52 by mbacoux          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
+require 'set'
 
 def main
 	rubynette = Rubynette.new
@@ -18,7 +19,8 @@ end
 
 class Rubynette
 	def	initialize
-		@version = "1.1.1 Lemon"
+		@version = "1.1.2 Lemon"
+		@file_list = Set.new
 	end
 	def hello
 		puts "\e[36;1mRubynette\e[37;1m version \e[32;1m" + @version + "\e[0m"
@@ -26,6 +28,9 @@ class Rubynette
 	def usage
 		puts "Usage: rubynette [file1] [file2] [file3] ..."
 		puts "Rubynette can guess your project config if there is a Makefile."
+	end
+	def parsed_files
+		return @file_list
 	end
 	def run
 		hello
@@ -74,6 +79,10 @@ class Parser
 		return false
 	end
 	def handle(filename)
+		if @rubynette.parsed_files.include? filename
+			return
+		end
+		@rubynette.parsed_files.add filename
 		@filename = filename
 		@file = File.open filename
 		sp = " " * 15
