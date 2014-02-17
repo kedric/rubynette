@@ -6,11 +6,12 @@
 #    By: mbacoux <marvin@42.fr>                     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2013/12/10 15:24:10 by mbacoux           #+#    #+#              #
-#    Updated: 2014/02/17 15:34:52 by mbacoux          ###   ########.fr        #
+#    Updated: 2014/02/17 20:11:25 by mbacoux          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 require 'set'
+require 'pathname'
 
 def main
 	rubynette = Rubynette.new
@@ -19,7 +20,7 @@ end
 
 class Rubynette
 	def	initialize
-		@version = "1.1.2 Lemon"
+		@version = "1.1.3 Lemon"
 		@file_list = Set.new
 	end
 	def hello
@@ -29,8 +30,11 @@ class Rubynette
 		puts "Usage: rubynette [file1] [file2] [file3] ..."
 		puts "Rubynette can guess your project config if there is a Makefile."
 	end
-	def parsed_files
-		return @file_list
+	def parsed? arg
+		return @file_list.include? Pathname.new(arg).realpath
+	end
+	def parsed! arg
+		@file_list.add Pathname.new(arg).realpath
 	end
 	def run
 		hello
@@ -79,10 +83,10 @@ class Parser
 		return false
 	end
 	def handle(filename)
-		if @rubynette.parsed_files.include? filename
+		if @rubynette.parsed? filename
 			return
 		end
-		@rubynette.parsed_files.add filename
+		@rubynette.parsed! filename
 		@filename = filename
 		@file = File.open filename
 		sp = " " * 15
@@ -347,8 +351,15 @@ class ParserMakefile < ParserText
 	end
 	def handle (file)
 		path = File.dirname(file)
-		files = `make -Bn -C #{path} | grep -o "[.a-zA-Z0-9_/-]*\\.c"`
-		files.each_line do |f|
+		rules = `make -Bn -C #{path} | grep .PHONY | sed "s/.PHONY[\t ]*://" | sed "s/,/ /"`.chomp
+		files = `make -Bn -C #{path} | grep -o "[.a-zA-Z0-9_/-]*\\.c"`.split
+		if rules
+			rules.each_line do |r|
+				files = files + `make -Bn -C #{path} #{r} | grep -o "[.a-zA-Z0-9_/-]*\\.c"`.split
+			end
+		end
+		files.uniq!
+		files.each do |f|
 			@rubynette.do_file(path + (path == "/" ? "" : "/") + f.gsub(/[\n]/, ''));
 		end
 		files = `make -Bn -C #{path} | grep -o "\\-I[ ]*[.a-zA-Z0-9_/-]*" | sed "s/-I//" | tr -d " " | sort -u`
