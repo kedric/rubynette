@@ -20,7 +20,7 @@ end
 
 class Rubynette
 	def	initialize
-		@version = "1.1.3 Lemon"
+		@version = "1.1.4 Lemon"
 		@file_list = Set.new
 	end
 	def hello
@@ -363,7 +363,7 @@ class ParserMakefile < ParserText
 			@rubynette.do_file(path + (path == "/" ? "" : "/") + f.gsub(/[\n]/, ''));
 		end
 		files = `make -Bn -C #{path} | grep -o "\\-I[ ]*[.a-zA-Z0-9_/-]*" | sed "s/-I//" | tr -d " " | sort -u`
-		files = files + "."
+		files = files + " ."
 		files.each_line do |f|
 			dir = Dir.foreach(path + (path == "/" ? "" : "/") + f.gsub(/[\n]/, "")) do |d|
 				if File.extname(path + (path == "/" ? "" : "/") + f.gsub(/[\n]/, "") + "/" + d.gsub(/[\n]/, "")) == ".h"
