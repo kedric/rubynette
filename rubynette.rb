@@ -363,8 +363,11 @@ class ParserMakefile < ParserText
 			@rubynette.do_file(path + (path == "/" ? "" : "/") + f.gsub(/[\n]/, ''));
 		end
 		files = `make -Bn -C #{path} | grep -o "\\-I[ ]*[.a-zA-Z0-9_/-]*" | sed "s/-I//" | tr -d " " | sort -u`
-		files = files + " ."
+		files = files + "."
 		files.each_line do |f|
+			if !(File.directory? f)
+				next
+			end
 			dir = Dir.foreach(path + (path == "/" ? "" : "/") + f.gsub(/[\n]/, "")) do |d|
 				if File.extname(path + (path == "/" ? "" : "/") + f.gsub(/[\n]/, "") + "/" + d.gsub(/[\n]/, "")) == ".h"
 					@rubynette.do_file(path + (path == "/" ? "" : "/") + f.gsub(/[\n]/, "") + "/" + d.gsub(/[\n]/, ""))
